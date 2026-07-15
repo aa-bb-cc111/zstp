@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三重对标找差分析报告</title>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ─── THEME TOKENS ─── */
+[data-theme="light"] {
+  --bg:          #f4f6f9;
+  --surface:     #ffffff;
+  --surface2:    #f0f3f8;
+  --border:      #e2e8f0;
+  --red:         #dc3545;
+  --red-dim:     rgba(220,53,69,0.08);
+  --red-border:  rgba(220,53,69,0.25);
+  --green:       #16a34a;
+  --green-dim:   rgba(22,163,74,0.08);
+  --green-border:rgba(22,163,74,0.25);
+  --amber:       #d97706;
+  --amber-dim:   rgba(217,119,6,0.08);
+  --amber-border:rgba(217,119,6,0.25);
+  --blue:        #2563eb;
+  --blue-dim:    rgba(37,99,235,0.08);
+  --text:        #1e293b;
+  --text-muted:  #64748b;
+  --text-dim:    #94a3b8;
+  --hero-bg:     #1e293b;
+  --hero-text:   #f1f5f9;
+  --shadow:      0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+}
+[data-theme="dark"] {
+  --bg:          #0f1117;
+  --surface:     #181c27;
+  --surface2:    #1e2333;
+  --border:      #2a3050;
+  --red:         #e85555;
+  --red-dim:     rgba(232,85,85,0.12);
+  --red-border:  rgba(232,85,85,0.3);
+  --green:       #3ecf8e;
+  --green-dim:   rgba(62,207,142,0.1);
+  --green-border:rgba(62,207,142,0.3);
+  --amber:       #f5a623;
+  --amber-dim:   rgba(245,166,35,0.1);
+  --amber-border:rgba(245,166,35,0.3);
+  --blue:        #4d9ef5;
+  --blue-dim:    rgba(77,158,245,0.1);
+  --text:        #e8ecf4;
+  --text-muted:  #7a859e;
+  --text-dim:    #4a5568;
+  --hero-bg:     #181c27;
+  --hero-text:   #e8ecf4;
+  --shadow:      0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ─── TOPBAR ─── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
+  box-shadow: var(--shadow);
+  transition: background 0.3s, border-color 0.3s;
+}
+.topbar-title {
+  font-family: 'ZCOOL XiaoWei', serif;
+  font-size: 15px; letter-spacing: 2px;
+  color: var(--text-muted);
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+/* NAV PILLS */
+.nav-pills { display: flex; gap: 4px; }
+.nav-pill {
+  padding: 5px 14px; border-radius: 100px;
+  font-size: 11px; letter-spacing: 0.5px; font-weight: 500;
+  cursor: pointer; border: 1px solid transparent;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.nav-pill:hover { background: var(--blue-dim); color: var(--blue); border-color: rgba(37,99,235,0.2); }
+
+/* THEME TOGGLE */
+.theme-toggle {
+  width: 44px; height: 24px; border-radius: 12px;
+  background: var(--border);
+  border: none; cursor: pointer; position: relative;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+.theme-toggle::after {
+  content: '';
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.3s, background 0.3s;
+}
+[data-theme="dark"] .theme-toggle { background: #4d9ef5; }
+[data-theme="dark"] .theme-toggle::after { transform: translateX(20px); background: #fff; }
+.theme-icon { font-size: 13px; }
+
+/* ─── HERO ─── */
+.hero {
+  padding: 60px 60px 48px;
+  background: var(--hero-bg);
+  color: var(--hero-text);
+  position: relative; overflow: hidden;
+}
+[data-theme="light"] .hero {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+.hero::before {
+  content:''; position:absolute; top:-120px; right:-80px;
+  width:440px; height:440px;
+  background:radial-gradient(circle,rgba(77,158,245,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero::after {
+  content:''; position:absolute; bottom:-60px; left:32%;
+  width:280px; height:280px;
+  background:radial-gradient(circle,rgba(62,207,142,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.eyebrow { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+.eyebrow-line { width:28px; height:2px; background:linear-gradient(90deg,#4d9ef5,#3ecf8e); border-radius:1px; }
+.eyebrow-text { font-size:11px; letter-spacing:4px; color:rgba(255,255,255,0.45); text-transform:uppercase; font-weight:500; }
+.hero h1 {
+  font-family:'ZCOOL XiaoWei',serif; font-size:40px; font-weight:400;
+  letter-spacing:4px; line-height:1.15;
+  background:linear-gradient(135deg,#f1f5f9 0%,#94a3b8 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  position:relative; z-index:1;
+}
+.hero-desc { margin-top:12px; font-size:14px; color:rgba(255,255,255,0.5); letter-spacing:0.5px; position:relative; z-index:1; }
+.chips { display:flex; gap:10px; margin-top:24px; flex-wrap:wrap; position:relative; z-index:1; }
+.chip { display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:100px; font-size:12px; letter-spacing:0.5px; border:1px solid; font-weight:500; cursor:pointer; transition:all 0.2s; }
+.chip-b { border-color:rgba(77,158,245,0.4);  background:rgba(77,158,245,0.1);  color:#7db8f7; }
+.chip-a { border-color:rgba(245,166,35,0.4); background:rgba(245,166,35,0.1); color:#f7c163; }
+.chip-g { border-color:rgba(62,207,142,0.4); background:rgba(62,207,142,0.1); color:#6bdfaa; }
+.chip:hover { transform:translateY(-1px); filter:brightness(1.15); }
+.cdot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.cdb{background:#4d9ef5} .cda{background:#f5a623} .cdg{background:#3ecf8e}
+
+/* ─── MAIN ─── */
+main { max-width:1080px; margin:0 auto; padding:48px 40px 80px; }
+
+/* ─── SECTION WRAPPER ─── */
+.bench { margin-bottom:44px; }
+.bench.hidden > .card,
+.bench.hidden > .card * { pointer-events: none; }
+
+.sec-label {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:18px; cursor:pointer; user-select:none;
+}
+.sec-label-left { display:flex; align-items:center; gap:14px; }
+.sl-num { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
+.sln-b { background:var(--blue-dim);  color:var(--blue);  border:1px solid rgba(37,99,235,0.25); }
+.sln-a { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(217,119,6,0.25); }
+.sln-g { background:var(--green-dim); color:var(--green); border:1px solid rgba(22,163,74,0.25); }
+.sl-text h2 { font-family:'ZCOOL XiaoWei',serif; font-size:20px; font-weight:400; letter-spacing:2px; }
+.sl-text p  { font-size:11px; color:var(--text-muted); letter-spacing:1px; margin-top:2px; }
+.collapse-btn {
+  width:28px; height:28px; border-radius:50%;
+  background:var(--surface2); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:var(--text-muted);
+  transition:transform 0.25s, background 0.2s;
+  flex-shrink:0;
+}
+.bench.collapsed .collapse-btn { transform:rotate(-90deg); }
+.sec-label:hover .collapse-btn { background:var(--border); }
+
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; overflow:hidden;
+  box-shadow:var(--shadow);
+  transition:all 0.3s ease;
+  transform-origin:top;
+}
+.bench.collapsed .card {
+  max-height:0 !important; opacity:0; overflow:hidden;
+  margin-top:-8px; pointer-events:none;
+  border-color:transparent; box-shadow:none;
+}
+
+/* ─── KPI ─── */
+.kpi-pair { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.kpi-half { background:var(--surface); padding:28px 32px; }
+.kpi-ht { font-size:11px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px; font-weight:500; }
+.kpi-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.kr-label { font-size:13px; color:var(--text-muted); }
+.kr-val { font-family:'ZCOOL XiaoWei',serif; font-size:28px; letter-spacing:1px; }
+.vn{color:var(--text-dim)} .vg{color:var(--green)} .vb{color:var(--red)}
+.dbar { height:4px; background:var(--border); border-radius:2px; margin:14px 0 10px; overflow:hidden; }
+.dfill { height:100%; border-radius:2px; width:0; transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+.dfg { background:linear-gradient(90deg,var(--green),#6bdfaa); }
+.dfb { background:linear-gradient(90deg,var(--red),#f08080); }
+.verdict { padding:10px 14px; border-radius:6px; font-size:12px; font-weight:500; }
+.vg-box { background:var(--green-dim); color:var(--green); border:1px solid var(--green-border); }
+.vb-box { background:var(--red-dim);   color:var(--red);   border:1px solid var(--red-border); }
+
+/* ─── SCORE ─── */
+.score-layout { display:grid; grid-template-columns:200px 1fr; gap:1px; background:var(--border); }
+.score-left {
+  background:var(--surface2); padding:32px 28px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+}
+.big-pct {
+  font-family:'ZCOOL XiaoWei',serif; font-size:56px; line-height:1;
+  background:linear-gradient(135deg,var(--amber),#fbbf24);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.big-pct-label { font-size:11px; color:var(--text-muted); letter-spacing:2px; margin-top:8px; }
+.big-pct-sub   { font-size:12px; color:var(--text-dim); margin-top:6px; }
+.score-right { background:var(--surface); padding:28px 32px; }
+.score-rt { font-size:11px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px; font-weight:500; }
+.si { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.si-label { font-size:13px; width:140px; flex-shrink:0; }
+.si-track { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+.si-fill { height:100%; border-radius:4px; width:0; transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+.sfg{background:var(--green)} .sfb{background:var(--red)} .sfa{background:var(--amber)}
+.si-score { width:42px; text-align:right; font-size:14px; font-weight:500; }
+.score-footer { margin-top:20px; padding:12px 16px; background:var(--red-dim); border:1px solid var(--red-border); border-radius:6px; font-size:12px; color:var(--red); }
+
+/* ─── TABLE ─── */
+.req-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead th { background:var(--surface2); color:var(--text-muted); font-size:11px; letter-spacing:1.5px; font-weight:500; text-transform:uppercase; padding:14px 18px; text-align:left; border-bottom:1px solid var(--border); }
+tbody tr { border-bottom:1px solid var(--border); transition:background 0.15s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:var(--surface2); }
+td { padding:16px 18px; vertical-align:middle; }
+.badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:100px; font-size:11px; font-weight:700; letter-spacing:0.5px; white-space:nowrap; }
+.bm { background:var(--red-dim); color:var(--red); border:1px solid var(--red-border); }
+.bp { background:var(--green-dim); color:var(--green); border:1px solid var(--green-border); }
+.dim-pill { display:inline-block; padding:3px 10px; background:var(--blue-dim); color:var(--blue); border-radius:4px; font-size:11px; font-weight:500; border:1px solid rgba(37,99,235,0.2); }
+.done { display:inline-flex; align-items:center; gap:5px; color:var(--green); font-size:12px; font-weight:500; }
+.todo { display:inline-flex; align-items:center; gap:5px; color:var(--red); font-size:12px; font-weight:500; }
+.sdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.sd { background:var(--green); box-shadow:0 0 5px var(--green); }
+.st { background:var(--red);   box-shadow:0 0 5px var(--red); }
+.req-desc { color:var(--text); line-height:1.6; }
+.req-desc strong { color:var(--text); font-weight:600; }
+.comply-bar { padding:18px 24px; border-top:1px solid var(--border); background:var(--surface2); display:flex; align-items:center; gap:20px; }
+.cb-label { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.cb-track { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+.cb-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--red),var(--amber)); width:0; transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+.cb-pct { font-size:13px; font-weight:600; color:var(--amber); white-space:nowrap; }
+
+/* ─── GAP SUMMARY ─── */
+.gap-sum { margin-top:48px; background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:var(--shadow); }
+.gs-head { padding:22px 32px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.gs-head h3 { font-family:'ZCOOL XiaoWei',serif; font-size:18px; letter-spacing:2px; font-weight:400; }
+.gs-sub { font-size:11px; color:var(--text-muted); letter-spacing:1px; margin-top:2px; }
+.ptag { padding:5px 14px; border-radius:100px; font-size:11px; font-weight:700; background:var(--red-dim); color:var(--red); border:1px solid var(--red-border); letter-spacing:1px; }
+.gap-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); }
+.gap-cell { background:var(--surface); padding:22px 24px; transition:background 0.2s; }
+.gap-cell:hover { background:var(--surface2); }
+.gc-pillar { font-size:10px; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; margin-bottom:10px; }
+.gc-title  { font-size:14px; font-weight:500; margin-bottom:10px; line-height:1.4; }
+.gc-body   { font-size:12px; color:var(--text-muted); line-height:1.7; }
+.gc-body strong { color:var(--amber); font-weight:600; }
+.gcs { display:inline-flex; align-items:center; gap:6px; margin-top:12px; font-size:11px; font-weight:600; letter-spacing:0.5px; padding:4px 10px; border-radius:4px; }
+.gcs-gap   { background:var(--red-dim);   color:var(--red);   border:1px solid var(--red-border); }
+.gcs-alert { background:var(--amber-dim); color:var(--amber); border:1px solid var(--amber-border); }
+
+/* ─── ACTIONS ─── */
+.actions { border-top:1px solid var(--border); padding:22px 32px; }
+.act-title { font-size:11px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:16px; font-weight:500; }
+.act-list { display:flex; flex-direction:column; gap:10px; }
+.act-item { display:flex; gap:14px; align-items:flex-start; padding:12px 14px; border-radius:8px; transition:background 0.15s; cursor:default; }
+.act-item:hover { background:var(--surface2); }
+.ai-num { width:22px; height:22px; border-radius:50%; background:var(--red-dim); color:var(--red); border:1px solid var(--red-border); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.ai-text { font-size:13px; color:var(--text-muted); line-height:1.6; }
+.ai-text strong { color:var(--text); font-weight:600; }
+
+/* ─── TOOLTIP ─── */
+[data-tip] { position:relative; }
+[data-tip]::after {
+  content:attr(data-tip);
+  position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%);
+  background:var(--text); color:var(--surface); padding:5px 10px;
+  border-radius:5px; font-size:11px; white-space:nowrap; letter-spacing:0.3px;
+  opacity:0; pointer-events:none; transition:opacity 0.2s;
+  z-index:50;
+}
+[data-tip]:hover::after { opacity:1; }
+
+footer { text-align:center; padding:22px; font-size:11px; color:var(--text-dim); letter-spacing:1.5px; border-top:1px solid var(--border); }
+
+@media(max-width:720px){
+  .topbar{padding:0 16px} .nav-pills{display:none}
+  .hero{padding:40px 24px 32px} .hero h1{font-size:28px}
+  main{padding:28px 16px 60px}
+  .kpi-pair,.score-layout,.gap-grid{grid-template-columns:1fr}
+  thead{display:none} td{display:block;padding:8px 14px}
+  .sec-label{flex-wrap:nowrap}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── TOPBAR ─── -->
+<div class="topbar">
+  <span class="topbar-title">三重对标找差</span>
+  <div class="topbar-right">
+    <nav class="nav-pills">
+      <a class="nav-pill" href="#s1">行业先进值</a>
+      <a class="nav-pill" href="#s2">绿色工厂</a>
+      <a class="nav-pill" href="#s3">供应商要求</a>
+      <a class="nav-pill" href="#gap">差距总览</a>
+    </nav>
+    <span class="theme-icon" id="themeIcon">☀️</span>
+    <button class="theme-toggle" id="themeToggle" title="切换主题" aria-label="切换明暗主题"></button>
+  </div>
+</div>
+
+<!-- ─── HERO ─── -->
+<div class="hero">
+  <div class="eyebrow">
+    <div class="eyebrow-line"></div>
+    <span class="eyebrow-text">Triple Benchmark Gap Analysis</span>
+  </div>
+  <h1>三重对标找差分析报告</h1>
+  <div class="hero-desc">绿色低碳转型 · 行业先进值 / 绿色工厂标准 / 大客户供应商要求 三维度对标</div>
+  <div class="chips">
+    <span class="chip chip-b" onclick="scrollTo('s1')"><span class="cdot cdb"></span>对标一：行业先进值</span>
+    <span class="chip chip-a" onclick="scrollTo('s2')"><span class="cdot cda"></span>对标二：绿色工厂评价通则</span>
+    <span class="chip chip-g" onclick="scrollTo('s3')"><span class="cdot cdg"></span>对标三：大客户供应商管理要求</span>
+  </div>
+</div>
+
+<main>
+
+  <!-- ═══ SECTION 1 ═══ -->
+  <div class="bench" id="s1">
+    <div class="sec-label" onclick="toggleSection(this)">
+      <div class="sec-label-left">
+        <div class="sl-num sln-b">01</div>
+        <div class="sl-text"><h2>与行业先进值对比</h2><p>INDUSTRY BEST PRACTICE BENCHMARK</p></div>
+      </div>
+      <div class="collapse-btn">▾</div>
+    </div>
+    <div class="card">
+      <div class="kpi-pair">
+        <div class="kpi-half">
+          <div class="kpi-ht">单位能源消耗（tce / 万元产值）</div>
+          <div class="kpi-row"><span class="kr-label">行业先进值</span><span class="kr-val vn" data-tip="越低越优">0.141</span></div>
+          <div class="kpi-row"><span class="kr-label">本企业实际值</span><span class="kr-val vg">0.131</span></div>
+          <div class="dbar"><div class="dfill dfg" data-w="93"></div></div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px">企业值为先进值的 92.9%（越低越优）</div>
+          <div class="verdict vg-box">✓ 优于先进值 7.1%，能耗控制已达行业领先水平</div>
+        </div>
+        <div class="kpi-half">
+          <div class="kpi-ht">单位产品碳排放强度（tCO₂e / 万元）</div>
+          <div class="kpi-row"><span class="kr-label">行业先进值</span><span class="kr-val vn" data-tip="越低越优">0.45</span></div>
+          <div class="kpi-row"><span class="kr-label">本企业实际值</span><span class="kr-val vb">0.50</span></div>
+          <div class="dbar"><div class="dfill dfb" data-w="100"></div></div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px">超出先进值 0.05 tCO₂e，差距 +11.1%</div>
+          <div class="verdict vb-box">⚠ 落后先进值 11.1%，碳排强度是核心差距所在</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 2 ═══ -->
+  <div class="bench" id="s2">
+    <div class="sec-label" onclick="toggleSection(this)">
+      <div class="sec-label-left">
+        <div class="sl-num sln-a">02</div>
+        <div class="sl-text"><h2>与绿色工厂评价通则对比</h2><p>GREEN FACTORY EVALUATION STANDARD</p></div>
+      </div>
+      <div class="collapse-btn">▾</div>
+    </div>
+    <div class="card">
+      <div class="score-layout">
+        <div class="score-left">
+          <div class="big-pct">30%</div>
+          <div class="big-pct-label">模块权重</div>
+          <div class="big-pct-sub">能源低碳化<br>是申报关键模块</div>
+        </div>
+        <div class="score-right">
+          <div class="score-rt">能源低碳化模块 · 各项得分</div>
+          <div class="si">
+            <span class="si-label">能源消耗强度</span>
+            <div class="si-track"><div class="si-fill sfg" data-w="70"></div></div>
+            <span class="si-score" style="color:var(--green)">7 分</span>
+          </div>
+          <div class="si">
+            <span class="si-label">碳排放强度</span>
+            <div class="si-track"><div class="si-fill sfb" data-w="20"></div></div>
+            <span class="si-score" style="color:var(--red)">2 分</span>
+          </div>
+          <div class="si">
+            <span class="si-label">可再生能源利用率</span>
+            <div class="si-track"><div class="si-fill sfa" data-w="70"></div></div>
+            <span class="si-score" style="color:var(--amber)">7 分</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+            模块合计：<strong style="color:var(--text);font-size:15px">16 分</strong>
+            <span style="color:var(--text-dim);margin-left:8px">（得分率约53%，距申报要求仍有差距）</span>
+          </div>
+          <div class="score-footer">
+            ⚠ <strong>碳排放强度仅得 2 分</strong>，是本模块最大短板，已成为申报绿色工厂的主要障碍；可再生能源利用率有进一步提升空间。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 3 ═══ -->
+  <div class="bench" id="s3">
+    <div class="sec-label" onclick="toggleSection(this)">
+      <div class="sec-label-left">
+        <div class="sl-num sln-g">03</div>
+        <div class="sl-text"><h2>与供应商管理要求对比</h2><p>KEY CUSTOMER (NEV OEM) SUPPLIER REQUIREMENTS</p></div>
+      </div>
+      <div class="collapse-btn">▾</div>
+    </div>
+    <div class="card">
+      <div style="padding:12px 20px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;gap:20px;padding-bottom:12px;font-size:12px;color:var(--text-muted);flex-wrap:wrap;align-items:center;">
+          <span style="display:flex;align-items:center;gap:6px"><span class="sdot sd"></span>已完成</span>
+          <span style="display:flex;align-items:center;gap:6px"><span class="sdot st"></span>未完成（存在差距）</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--text-dim)">对标对象：某新能源汽车制造企业</span>
+        </div>
+      </div>
+      <div class="req-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:90px">层级</th>
+              <th style="width:44px">序号</th>
+              <th style="width:110px">管理维度</th>
+              <th>具体要求</th>
+              <th style="width:100px">达标状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge bm">⬡ 必达项</span></td>
+              <td style="color:var(--text-dim)">1</td>
+              <td><span class="dim-pill">组织碳核查</span></td>
+              <td class="req-desc">供应商<strong>必须开展组织碳核查</strong>，完成年度碳盘查并建立排放清单</td>
+              <td><div class="done"><span class="sdot sd"></span>已完成</div></td>
+            </tr>
+            <tr>
+              <td><span class="badge bm">⬡ 必达项</span></td>
+              <td style="color:var(--text-dim)">2</td>
+              <td><span class="dim-pill">产品碳足迹</span></td>
+              <td class="req-desc">供应商<strong>必须展开产品碳足迹核算</strong>，并向整车厂提供所供产品的碳足迹数据</td>
+              <td><div class="todo"><span class="sdot st"></span>未完成</div></td>
+            </tr>
+            <tr>
+              <td><span class="badge bm">⬡ 必达项</span></td>
+              <td style="color:var(--text-dim)">3</td>
+              <td><span class="dim-pill">碳管理平台</span></td>
+              <td class="req-desc">供应商<strong>必须接入碳管理平台</strong>，按时提交碳数据</td>
+              <td><div class="todo"><span class="sdot st"></span>未完成</div></td>
+            </tr>
+            <tr>
+              <td><span class="badge bp">◎ 加分项</span></td>
+              <td style="color:var(--text-dim)">4</td>
+              <td><span class="dim-pill">绿电使用</span></td>
+              <td class="req-desc">供应商应<strong>在生产过程中逐步扩大绿电使用比例</strong></td>
+              <td><div class="todo"><span class="sdot st"></span>未完成</div></td>
+            </tr>
+            <tr>
+              <td><span class="badge bp">◎ 加分项</span></td>
+              <td style="color:var(--text-dim)">5</td>
+              <td><span class="dim-pill">绿色工厂</span></td>
+              <td class="req-desc">供应商获评<strong>国家级或省级绿色工厂</strong>认定</td>
+              <td><div class="todo"><span class="sdot st"></span>未完成</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="comply-bar">
+        <span class="cb-label">必达项完成率</span>
+        <div class="cb-track"><div class="cb-fill" data-w="33"></div></div>
+        <span class="cb-pct">1 / 3 &nbsp;(33%)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ GAP SUMMARY ═══ -->
+  <div class="gap-sum" id="gap">
+    <div class="gs-head">
+      <div>
+        <h3>三重对标差距总览</h3>
+        <div class="gs-sub">TRIPLE BENCHMARK GAP SUMMARY &amp; PRIORITY ACTIONS</div>
+      </div>
+      <span class="ptag">3项核心差距待闭合</span>
+    </div>
+    <div class="gap-grid">
+      <div class="gap-cell">
+        <div class="gc-pillar">对标一 · 行业先进值</div>
+        <div class="gc-title">碳排放强度超出先进水平</div>
+        <div class="gc-body">能耗强度已领先（0.131 vs 0.141），但碳排放强度落后 <strong>11.1%</strong>（0.50 vs 0.45），需降低 <strong>≥0.05 tCO₂e</strong> 方可达标，能源结构优化是关键。</div>
+        <span class="gcs gcs-gap">⚠ 存在差距</span>
+      </div>
+      <div class="gap-cell">
+        <div class="gc-pillar">对标二 · 绿色工厂评价</div>
+        <div class="gc-title">能源低碳化模块得分不足</div>
+        <div class="gc-body">碳排放强度仅 <strong>2分</strong>（极低），模块得分率约53%，无法满足绿色工厂申报要求。提升绿电比例与降碳是关键突破口。</div>
+        <span class="gcs gcs-gap">⚠ 申报障碍</span>
+      </div>
+      <div class="gap-cell">
+        <div class="gc-pillar">对标三 · 供应商管理要求</div>
+        <div class="gc-title">必达项仅完成 1/3</div>
+        <div class="gc-body">产品碳足迹核算、碳管理平台接入 <strong>2项必达项</strong> 尚未完成，存在失去大客户合作资格的风险。加分项（绿电、绿色工厂）亦均未达成。</div>
+        <span class="gcs gcs-alert">⚡ 紧急补缺</span>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="act-title">优先行动建议 · Priority Actions</div>
+      <div class="act-list">
+        <div class="act-item">
+          <div class="ai-num">1</div>
+          <div class="ai-text"><strong>【紧急】完成产品碳足迹核算并接入碳管理平台</strong> — 补齐2项必达项缺口，消除合作资格风险，建议在当年内完成。</div>
+        </div>
+        <div class="act-item">
+          <div class="ai-num">2</div>
+          <div class="ai-text"><strong>【重点】推动能源结构转型，扩大绿电使用比例</strong> — 设定分年度绿电目标，同步将碳排放强度降至≤0.45，突破绿色工厂申报瓶颈。</div>
+        </div>
+        <div class="act-item">
+          <div class="ai-num">3</div>
+          <div class="ai-text"><strong>【战略】以绿色工厂申报为抓手，整合三重对标目标</strong> — 获评绿色工厂可同时提升大客户供应商评级、获政府补贴（80–100万元），并巩固碳排指标的行业竞争优势。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>三重对标找差分析报告 · 绿色低碳转型专项 · 仅供内部决策参考</footer>
+
+<script>
+// ── Theme toggle ──
+const root = document.documentElement;
+const btn  = document.getElementById('themeToggle');
+const icon = document.getElementById('themeIcon');
+
+function applyTheme(t) {
+  root.setAttribute('data-theme', t);
+  icon.textContent = t === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('theme', t);
+}
+btn.addEventListener('click', () => {
+  applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+// Init from localStorage or system preference
+const saved = localStorage.getItem('theme');
+if (saved) { applyTheme(saved); }
+else if (window.matchMedia('(prefers-color-scheme: dark)').matches) { applyTheme('dark'); }
+
+// ── Section collapse ──
+function toggleSection(labelEl) {
+  const bench = labelEl.closest('.bench');
+  bench.classList.toggle('collapsed');
+}
+
+// ── Scroll helper ──
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── Animate bars on scroll ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('[data-w]').forEach(bar => {
+        bar.style.width = bar.dataset.w + '%';
+      });
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.bench, .gap-sum').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

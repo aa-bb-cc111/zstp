@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>绿色供应链与绿色工厂知识图谱</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #071421 0%, #0f2436 45%, #102f49 100%);
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .header {
+      position: absolute;
+      top: 20px;
+      left: 40px;
+      z-index: 10;
+    }
+
+    .header h1 {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #7be7ff, #6fffb0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+      max-width: 760px;
+      line-height: 1.8;
+    }
+
+    svg {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .link {
+      fill: none;
+      stroke: rgba(120, 200, 255, 0.28);
+      stroke-width: 1.5;
+    }
+
+    .node circle {
+      stroke-width: 2;
+      transition: all 0.3s ease;
+      filter: drop-shadow(0 0 10px rgba(0,255,255,0.35));
+    }
+
+    .node:hover circle {
+      transform: scale(1.08);
+      filter: drop-shadow(0 0 18px rgba(0,255,255,0.8));
+    }
+
+    .node text {
+      fill: #ffffff;
+      font-size: 13px;
+      pointer-events: none;
+      text-anchor: middle;
+    }
+
+    .legend {
+      position: absolute;
+      right: 30px;
+      top: 30px;
+      width: 240px;
+      background: rgba(7, 20, 33, 0.75);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 20px;
+      z-index: 20;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    .legend h3 {
+      margin-bottom: 16px;
+      font-size: 18px;
+      color: #7be7ff;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      color: rgba(255,255,255,0.85);
+      font-size: 13px;
+    }
+
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 18px;
+      left: 40px;
+      color: rgba(255,255,255,0.45);
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>绿色供应链与绿色工厂知识图谱</h1>
+</div>
+
+<div class="legend">
+  <h3>知识层级</h3>
+  <div class="legend-item"><div class="legend-color" style="background:#00e5ff"></div>核心战略层</div>
+  <div class="legend-item"><div class="legend-color" style="background:#6fffb0"></div>绿色工厂评价层</div>
+  <div class="legend-item"><div class="legend-color" style="background:#ffd166"></div>碳管理执行层</div>
+  <div class="legend-item"><div class="legend-color" style="background:#ff7b7b"></div>指标与公式层</div>
+</div>
+
+<div class="footer">
+  Knowledge Graph · Green Factory · Carbon Management · BYD Supplier Ecosystem
+</div>
+
+<svg id="graph" viewBox="0 0 2000 1250" preserveAspectRatio="xMidYMid meet"></svg>
+
+<script>
+const nodes = [
+  {id:'绿色供应链体系', group:'core', r:44, x:900, y:420},
+
+  {id:'2045全价值链碳中和', group:'strategy', r:26, x:620, y:180},
+  {id:'绿色工厂评价', group:'factory', r:32, x:1180, y:200},
+  {id:'供应商碳管理', group:'carbon', r:30, x:620, y:650},
+
+  {id:'能源低碳化', group:'factory', r:22, x:1060, y:90},
+  {id:'资源高效化', group:'factory', r:22, x:1240, y:90},
+  {id:'生产洁净化', group:'factory', r:22, x:1380, y:180},
+  {id:'产品绿色化', group:'factory', r:22, x:1380, y:320},
+  {id:'用地集约化', group:'factory', r:22, x:1240, y:410},
+
+  {id:'碳数据透明化', group:'carbon', r:20, x:460, y:520},
+  {id:'产品碳足迹', group:'carbon', r:20, x:420, y:650},
+  {id:'绿色采购体系', group:'carbon', r:20, x:520, y:780},
+  {id:'绿电使用', group:'carbon', r:18, x:700, y:810},
+  {id:'节能技改', group:'carbon', r:18, x:860, y:810},
+  {id:'循环经济', group:'carbon', r:18, x:1020, y:780},
+
+  {id:'ISO14067', group:'formula', r:16, x:320, y:620},
+  {id:'GB/T32150', group:'formula', r:16, x:320, y:700},
+  {id:'单位产品碳排放量', group:'formula', r:18, x:1080, y:560},
+  {id:'可再生能源利用率', group:'formula', r:18, x:1280, y:560},
+  {id:'单位产品综合能耗', group:'formula', r:18, x:1450, y:540},
+
+  {id:'绿色设计', group:'factory', r:18, x:1500, y:300},
+  {id:'绿色物流', group:'carbon', r:18, x:520, y:900},
+  {id:'绿色包装', group:'carbon', r:18, x:700, y:930},
+
+  {id:'能源管理体系', group:'formula', r:16, x:980, y:20},
+  {id:'环境管理体系', group:'formula', r:16, x:1180, y:20},
+  {id:'职业健康体系', group:'formula', r:16, x:1380, y:20},
+
+  // —— 新增：JB/T 14451—2023《钢质锻件锻造生产能源消耗限额及评价方法》分支 ——
+  {id:'锻造能耗限额标准', group:'formula', r:22, x:1660, y:470},
+  {id:'加热工序限额', group:'formula', r:16, x:1800, y:380},
+  {id:'锻造工序限额', group:'formula', r:16, x:1840, y:470},
+  {id:'热处理工序限额', group:'formula', r:16, x:1800, y:570},
+];
+
+const links = [
+  ['绿色供应链体系','2045全价值链碳中和'],
+  ['绿色供应链体系','绿色工厂评价'],
+  ['绿色供应链体系','供应商碳管理'],
+
+  ['绿色工厂评价','能源低碳化'],
+  ['绿色工厂评价','资源高效化'],
+  ['绿色工厂评价','生产洁净化'],
+  ['绿色工厂评价','产品绿色化'],
+  ['绿色工厂评价','用地集约化'],
+
+  ['供应商碳管理','碳数据透明化'],
+  ['供应商碳管理','产品碳足迹'],
+  ['供应商碳管理','绿色采购体系'],
+  ['供应商碳管理','绿电使用'],
+  ['供应商碳管理','节能技改'],
+  ['供应商碳管理','循环经济'],
+  ['供应商碳管理','绿色物流'],
+  ['供应商碳管理','绿色包装'],
+
+  ['产品碳足迹','ISO14067'],
+  ['产品碳足迹','GB/T32150'],
+
+  ['能源低碳化','单位产品碳排放量'],
+  ['能源低碳化','可再生能源利用率'],
+  ['能源低碳化','单位产品综合能耗'],
+
+  ['产品绿色化','绿色设计'],
+
+  ['绿色工厂评价','能源管理体系'],
+  ['绿色工厂评价','环境管理体系'],
+  ['绿色工厂评价','职业健康体系'],
+
+  // —— 新增：单位产品综合能耗 / 单位产品碳排放量 与锻造行业能耗限额标准的关联 ——
+  ['单位产品综合能耗','锻造能耗限额标准'],
+  ['单位产品碳排放量','锻造能耗限额标准'],
+  ['锻造能耗限额标准','加热工序限额'],
+  ['锻造能耗限额标准','锻造工序限额'],
+  ['锻造能耗限额标准','热处理工序限额'],
+];
+
+const svg = document.getElementById('graph');
+const ns = 'http://www.w3.org/2000/svg';
+
+// 整体图谱容器：向下平移，并适当左移以让图谱在可视区域内居中，避免与标题/图例文字粘连
+const elementsGroup = document.createElementNS(ns,'g');
+elementsGroup.setAttribute('transform','translate(-80, 220)');
+svg.appendChild(elementsGroup);
+
+const colors = {
+  core:'#00e5ff',
+  strategy:'#7be7ff',
+  factory:'#6fffb0',
+  carbon:'#ffd166',
+  formula:'#ff7b7b'
+};
+
+// 三重对标 / 绿色工厂评价 —— 常显数据标签
+const staticLabels = {
+  // 三重对标核心指标
+  '单位产品碳排放量': '行业先进值 0.45 tCO₂e/万元',
+  '单位产品综合能耗': '行业先进值 0.141 tce/万元',
+
+  // 绿色工厂评价分支：仅保留五大维度分数
+  '能源低碳化': '30分',
+  '资源高效化': '30分',
+  '生产洁净化': '16分',
+  '产品绿色化': '16分',
+  '用地集约化': '8分'
+};
+
+function createStaticLabel(node, labelText){
+  const g = document.createElementNS(ns,'g');
+  g.setAttribute('class','static-label');
+  g.style.pointerEvents = 'none';
+
+  // 估算文字宽度以设置背景框大小
+  const paddingX = 12;
+  const boxWidth = Math.max(108, labelText.length * 12 + paddingX * 2);
+  const boxHeight = 30;
+
+  // 根据节点在画布中的位置，自动选择标签显示在上方或下方，避免超出画布
+  const spaceAbove = node.y - node.r;
+  const needAbove = boxHeight + 14 + 12;
+  const placeBelow = spaceAbove < needAbove;
+
+  const boxX = node.x - boxWidth / 2;
+  const boxY = placeBelow ? (node.y + node.r + 14) : (node.y - node.r - boxHeight - 14);
+
+  const rect = document.createElementNS(ns,'rect');
+  rect.setAttribute('x', boxX);
+  rect.setAttribute('y', boxY);
+  rect.setAttribute('width', boxWidth);
+  rect.setAttribute('height', boxHeight);
+  rect.setAttribute('rx', 7);
+  rect.setAttribute('fill', 'rgba(7,20,33,0.92)');
+  rect.setAttribute('stroke', '#00e5ff');
+  rect.setAttribute('stroke-width', '1');
+  rect.style.filter = 'drop-shadow(0 0 6px rgba(0,229,255,0.5))';
+
+  const text = document.createElementNS(ns,'text');
+  text.setAttribute('x', node.x);
+  text.setAttribute('y', boxY + boxHeight / 2 + 4);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-size', '11.5');
+  text.setAttribute('fill', '#7be7ff');
+  text.setAttribute('font-weight', '600');
+  text.textContent = labelText;
+
+  // 指向节点的小三角，方向随标签上/下方位置翻转
+  const tri = document.createElementNS(ns,'polygon');
+  const triCx = node.x;
+  if(placeBelow){
+    const triY = boxY;
+    tri.setAttribute('points', `${triCx-7},${triY} ${triCx+7},${triY} ${triCx},${triY-9}`);
+  } else {
+    const triY = boxY + boxHeight;
+    tri.setAttribute('points', `${triCx-7},${triY} ${triCx+7},${triY} ${triCx},${triY+9}`);
+  }
+  tri.setAttribute('fill', 'rgba(7,20,33,0.92)');
+  tri.setAttribute('stroke', '#00e5ff');
+  tri.setAttribute('stroke-width', '1');
+
+  g.appendChild(rect);
+  g.appendChild(tri);
+  g.appendChild(text);
+  elementsGroup.appendChild(g);
+  return g;
+}
+
+function createLink(source, target){
+  const s = nodes.find(n=>n.id===source);
+  const t = nodes.find(n=>n.id===target);
+
+  const path = document.createElementNS(ns,'path');
+  path.setAttribute('class','link');
+
+  const mx = (s.x+t.x)/2;
+  const my = (s.y+t.y)/2 - 40;
+
+  path.setAttribute('d', `M ${s.x} ${s.y} Q ${mx} ${my} ${t.x} ${t.y}`);
+  elementsGroup.appendChild(path);
+}
+
+function createNode(node){
+  const g = document.createElementNS(ns,'g');
+  g.setAttribute('class','node');
+
+  const circle = document.createElementNS(ns,'circle');
+  circle.setAttribute('cx', node.x);
+  circle.setAttribute('cy', node.y);
+  circle.setAttribute('r', node.r);
+  circle.setAttribute('fill', colors[node.group]);
+  circle.setAttribute('fill-opacity', '0.18');
+  circle.setAttribute('stroke', colors[node.group]);
+
+  const text = document.createElementNS(ns,'text');
+  text.setAttribute('x', node.x);
+  text.setAttribute('y', node.y + 5);
+  text.textContent = node.id;
+
+  if(node.id.length > 8){
+    text.setAttribute('font-size','12');
+  }
+
+  g.appendChild(circle);
+  g.appendChild(text);
+
+  const pulse = document.createElementNS(ns,'animate');
+  pulse.setAttribute('attributeName','r');
+  pulse.setAttribute('values',`${node.r};${node.r+4};${node.r}`);
+  pulse.setAttribute('dur','4s');
+  pulse.setAttribute('repeatCount','indefinite');
+  circle.appendChild(pulse);
+
+  elementsGroup.appendChild(g);
+}
+
+links.forEach(link=>createLink(link[0],link[1]));
+nodes.forEach(node=>createNode(node));
+
+// 统一在所有节点绘制完成后再叠加数据标签，确保标签始终显示在最上层
+nodes.forEach(node=>{
+  if(staticLabels[node.id]){
+    createStaticLabel(node, staticLabels[node.id]);
+  }
+});
+
+</script>
+
+</body>
+</html>
